@@ -25,7 +25,7 @@ import { warn } from "../src/logger.ts";
 export const EFFORT_LEVELS = ["low", "medium", "high"] as const;
 export type EffortLevel = (typeof EFFORT_LEVELS)[number];
 
-/** Base models that REQUIRE --effort, mapped to the levels each accepts. */
+/** Base models that pair with --effort, mapped to the levels each accepts. */
 const EFFORT_MODELS = {
   "gemini-3.8-flash": ["low", "medium", "high"],
   "gemini-3.7-flash": ["low", "medium", "high"],
@@ -33,16 +33,17 @@ const EFFORT_MODELS = {
   "gemini-3.1-pro": ["low", "high"],
   "claude-opus-5-5": ["low", "medium", "high"],
   "claude-sonnet-5-5": ["low", "medium", "high"],
+  "gpt-oss-120b": ["medium"],
 } as const satisfies Record<string, readonly EffortLevel[]>;
 
 type EffortModel = keyof typeof EFFORT_MODELS;
 
 /**
- * Slugs whose base name is not offered here. agy's gpt-oss-120b base accepts
- * only "medium" and does NOT require --effort, a rule no other model follows,
- * so only the full slug is exposed.
+ * Bases agy also runs bare, without --effort. Every other base REQUIRES it.
+ * Measured on 1.2.16: `--model gpt-oss-120b` alone and with `--effort medium`
+ * both succeed; low/high answer "has no \"low\" effort (available: medium)".
  */
-const FIXED_MODELS = ["gpt-oss-120b-medium"] as const;
+const EFFORT_OPTIONAL = new Set<EffortModel>(["gpt-oss-120b"]);
 
 /** Full slugs exactly as printed by `agy models` — effort already baked in. */
 export const CANONICAL_MODELS = [
@@ -75,6 +76,7 @@ export const SELECTABLE_MODELS = [
   "gemini-3.1-pro",
   "claude-opus-5-5",
   "claude-sonnet-5-5",
+  "gpt-oss-120b",
 ] as const;
 
 export type SelectableModel = (typeof SELECTABLE_MODELS)[number];
@@ -88,12 +90,9 @@ export const EFFORT_MODEL_NAMES = Object.keys(EFFORT_MODELS);
  * Recomputing it here turns that silent divergence into a startup warning.
  */
 export function assertCatalogConsistency(): void {
-  const derived = [
-    ...Object.entries(EFFORT_MODELS).flatMap(([base, efforts]) =>
-      (efforts as readonly EffortLevel[]).map((effort) => `${base}-${effort}`)
-    ),
-    ...FIXED_MODELS,
-  ];
+  const derived = Object.entries(EFFORT_MODELS).flatMap(([base, efforts]) =>
+    (efforts as readonly EffortLevel[]).map((effort) => `${base}-${effort}`)
+  );
   const canonical = new Set<string>(CANONICAL_MODELS);
   const missing = derived.filter((slug) => !canonical.has(slug));
   const extra = CANONICAL_MODELS.filter((slug) => !derived.includes(slug));
@@ -102,7 +101,7 @@ export function assertCatalogConsistency(): void {
     warn(
       "catálogo interno inconsistente — " +
         `faltando em CANONICAL_MODELS: [${missing.join(", ")}]; ` +
-        `sem origem em EFFORT_MODELS/FIXED_MODELS: [${extra.join(", ")}]`
+        `sem origem em EFFORT_MODELS: [${extra.join(", ")}]`
     );
   }
 }
@@ -148,6 +147,7 @@ export function buildModelArgs(
   if (isEffortModel(model)) {
     const allowed: readonly EffortLevel[] = EFFORT_MODELS[model];
     if (effort === undefined) {
+      if (EFFORT_OPTIONAL.has(model)) return { ok: true, args: [`--model=${model}`] };
       return {
         ok: false,
         error: `O modelo '${model}' exige o parâmetro effort (aceita: ${allowed.join(", ")}). Como alternativa use o slug completo, ex.: '${model}-${allowed[allowed.length - 1]}'.`,

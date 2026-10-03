@@ -584,6 +584,26 @@ describe("construção de argumentos", () => {
     }
   });
 
+  test("gpt-oss-120b sem effort é aceito: vira só --model=, sem --effort", async () => {
+    const { res, primary } = await argvFor({ prompt: "p", model: "gpt-oss-120b" });
+    assert.ok(!isErr(res), textOf(res));
+    assert.ok(primary.includes("--model=gpt-oss-120b"), JSON.stringify(primary));
+    assert.ok(!primary.some((x) => x.startsWith("--effort=")), JSON.stringify(primary));
+  });
+
+  test("gpt-oss-120b com effort medium vira --model= e --effort=medium", async () => {
+    const { primary } = await argvFor({ prompt: "p", model: "gpt-oss-120b", effort: "medium" });
+    assert.ok(primary.includes("--model=gpt-oss-120b"), JSON.stringify(primary));
+    assert.ok(primary.includes("--effort=medium"), JSON.stringify(primary));
+  });
+
+  test("gpt-oss-120b rejeita effort 'low' (só aceita medium), sem spawnar processo", async () => {
+    const { res, all } = await argvFor({ prompt: "p", model: "gpt-oss-120b", effort: "low" });
+    assert.ok(isErr(res) && textOf(res).includes("não aceita effort 'low'"), textOf(res));
+    assert.ok(textOf(res).includes("aceita: medium"), textOf(res));
+    assert.equal(all.filter(isPrimary).length, 0);
+  });
+
   test("claude-opus-5-5 sem effort é rejeitado localmente", async () => {
     const { res, all } = await argvFor({ prompt: "p", model: "claude-opus-5-5" });
     assert.ok(isErr(res) && textOf(res).includes("exige o parâmetro effort"), textOf(res));

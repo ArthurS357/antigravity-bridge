@@ -73,10 +73,10 @@ Use **caminhos absolutos** no prompt e em `context_files`: o `agy` não roda no 
 
 ### Modelos e `effort`
 
-`model` aceita 24 valores: 18 slugs completos, com o esforço já embutido (`gemini-3.8-flash-high`, `gemini-3.1-pro-low`, `claude-opus-5-5-high`, `claude-sonnet-5-5-medium`, `gpt-oss-120b-medium`, …), e 6 nomes base (`gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.1-pro`, `claude-opus-5-5`, `claude-sonnet-5-5`). Catálogo verificado contra `agy models` no agy 1.2.16 em 2026-10-03, quando os `claude-*-4-6` foram aposentados. Regras:
+`model` aceita 25 valores: 18 slugs completos, com o esforço já embutido (`gemini-3.8-flash-high`, `gemini-3.1-pro-low`, `claude-opus-5-5-high`, `claude-sonnet-5-5-medium`, `gpt-oss-120b-medium`, …), e 7 nomes base (`gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.1-pro`, `claude-opus-5-5`, `claude-sonnet-5-5`, `gpt-oss-120b`). Catálogo verificado contra `agy models` no agy 1.2.16 em 2026-10-03, quando os `claude-*-4-6` foram aposentados. Regras:
 
 - Sem `model`: vale o default do IDE, e `effort` sozinho (`low`/`medium`/`high`) se aplica a ele.
-- **Nome base** exige `effort`; o `gemini-3.1-pro` só aceita `low` e `high`.
+- **Nome base** exige `effort`; o `gemini-3.1-pro` só aceita `low` e `high`. Exceção: `gpt-oss-120b` roda sem `effort` e só aceita `medium`.
 - **Slug completo** não aceita `effort`, porque o esforço já está no nome (vale também para `gpt-oss-120b-medium`).
 - Combinação inválida é rejeitada localmente, antes de spawnar o `agy` (sem custo).
 

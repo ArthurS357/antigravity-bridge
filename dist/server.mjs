@@ -21661,9 +21661,10 @@ var EFFORT_MODELS = {
   "gemini-3.6-flash": ["low", "medium", "high"],
   "gemini-3.1-pro": ["low", "high"],
   "claude-opus-5-5": ["low", "medium", "high"],
-  "claude-sonnet-5-5": ["low", "medium", "high"]
+  "claude-sonnet-5-5": ["low", "medium", "high"],
+  "gpt-oss-120b": ["medium"]
 };
-var FIXED_MODELS = ["gpt-oss-120b-medium"];
+var EFFORT_OPTIONAL = /* @__PURE__ */ new Set(["gpt-oss-120b"]);
 var CANONICAL_MODELS = [
   "gemini-3.8-flash-high",
   "gemini-3.8-flash-medium",
@@ -21691,22 +21692,20 @@ var SELECTABLE_MODELS = [
   "gemini-3.6-flash",
   "gemini-3.1-pro",
   "claude-opus-5-5",
-  "claude-sonnet-5-5"
+  "claude-sonnet-5-5",
+  "gpt-oss-120b"
 ];
 var EFFORT_MODEL_NAMES = Object.keys(EFFORT_MODELS);
 function assertCatalogConsistency() {
-  const derived = [
-    ...Object.entries(EFFORT_MODELS).flatMap(
-      ([base, efforts]) => efforts.map((effort) => `${base}-${effort}`)
-    ),
-    ...FIXED_MODELS
-  ];
+  const derived = Object.entries(EFFORT_MODELS).flatMap(
+    ([base, efforts]) => efforts.map((effort) => `${base}-${effort}`)
+  );
   const canonical = new Set(CANONICAL_MODELS);
   const missing = derived.filter((slug) => !canonical.has(slug));
   const extra = CANONICAL_MODELS.filter((slug) => !derived.includes(slug));
   if (missing.length > 0 || extra.length > 0) {
     warn(
-      `cat\xE1logo interno inconsistente \u2014 faltando em CANONICAL_MODELS: [${missing.join(", ")}]; sem origem em EFFORT_MODELS/FIXED_MODELS: [${extra.join(", ")}]`
+      `cat\xE1logo interno inconsistente \u2014 faltando em CANONICAL_MODELS: [${missing.join(", ")}]; sem origem em EFFORT_MODELS: [${extra.join(", ")}]`
     );
   }
 }
@@ -21732,6 +21731,7 @@ function buildModelArgs(model, effort) {
   if (isEffortModel(model)) {
     const allowed = EFFORT_MODELS[model];
     if (effort === void 0) {
+      if (EFFORT_OPTIONAL.has(model)) return { ok: true, args: [`--model=${model}`] };
       return {
         ok: false,
         error: `O modelo '${model}' exige o par\xE2metro effort (aceita: ${allowed.join(", ")}). Como alternativa use o slug completo, ex.: '${model}-${allowed[allowed.length - 1]}'.`
@@ -22065,7 +22065,7 @@ var toolInputSchema = {
   json_output: external_exports.boolean().optional().describe("Se true, pede ao agy uma resposta em JSON. Para JSON garantido por schema, use json_schema."),
   json_schema: external_exports.string().optional().describe("JSON Schema (string ou caminho de arquivo) que for\xE7a sa\xEDda estruturada nativa via --json-schema."),
   model: external_exports.enum(SELECTABLE_MODELS).optional().describe(
-    `Modelo do Antigravity. Se omitido, usa o default do IDE. Os slugs completos (ex.: 'gemini-3.8-flash-high') j\xE1 embutem o esfor\xE7o e dispensam 'effort'. Os nomes base (${EFFORT_MODEL_NAMES.map((name) => `'${name}'`).join(", ")}) exigem 'effort' \u2014 e 'gemini-3.1-pro' s\xF3 aceita low|high. Aten\xE7\xE3o a cotas: modelos gemini-* , claude-* e gpt-* consomem cotas separadas.`
+    `Modelo do Antigravity. Se omitido, usa o default do IDE. Os slugs completos (ex.: 'gemini-3.8-flash-high') j\xE1 embutem o esfor\xE7o e dispensam 'effort'. Os nomes base (${EFFORT_MODEL_NAMES.map((name) => `'${name}'`).join(", ")}) exigem 'effort' \u2014 e 'gemini-3.1-pro' s\xF3 aceita low|high. Exce\xE7\xE3o: em 'gpt-oss-120b' o 'effort' \xE9 opcional e s\xF3 aceita medium. Aten\xE7\xE3o a cotas: modelos gemini-* , claude-* e gpt-* consomem cotas separadas.`
   ),
   effort: external_exports.enum(EFFORT_LEVELS).optional().describe(
     "N\xEDvel de racioc\xEDnio. V\xE1lido sozinho (aplica ao modelo default) ou junto de um nome base. N\xE3o pode ser combinado com um slug completo, que j\xE1 embute o esfor\xE7o."

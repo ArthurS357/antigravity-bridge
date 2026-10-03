@@ -11,3 +11,4 @@ scratchpad/
 *.key
 MIGRATION.md
 .claude
+POST_RESTART.md

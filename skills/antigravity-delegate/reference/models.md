@@ -2,7 +2,7 @@
 
 Fonte: `service/model-catalog.ts` do Antigravity Bridge v1.9.0, verificado contra `agy models` no agy 1.2.16 em 2026-10-03. Toda combinação inválida é **rejeitada localmente, sem spawnar o `agy`** (erro instantâneo e gratuito). Valor fora do enum vira `InvalidParams` do SDK.
 
-## Os 24 valores aceitos em `model`
+## Os 25 valores aceitos em `model`
 
 ### 18 slugs completos (esforço já embutido — **não passe `effort`**)
 
@@ -16,7 +16,7 @@ Fonte: `service/model-catalog.ts` do Antigravity Bridge v1.9.0, verificado contr
 | Claude Sonnet 5.5 | `claude-sonnet-5-5-low`, `claude-sonnet-5-5-medium`, `claude-sonnet-5-5-high` |
 | GPT | `gpt-oss-120b-medium` |
 
-### 6 nomes base (**exigem `effort`**)
+### 7 nomes base (**exigem `effort`**, exceto `gpt-oss-120b`)
 
 | Nome base | `effort` aceito |
 |---|---|
@@ -26,11 +26,12 @@ Fonte: `service/model-catalog.ts` do Antigravity Bridge v1.9.0, verificado contr
 | `gemini-3.1-pro` | `low`, `high` — **sem `medium`** |
 | `claude-opus-5-5` | `low`, `medium`, `high` |
 | `claude-sonnet-5-5` | `low`, `medium`, `high` |
+| `gpt-oss-120b` | `medium` — **opcional**: sem `effort` também roda |
 
 ## Regras de `effort`
 
 1. **Sem `model`**: `effort` sozinho é válido e se aplica ao modelo default do IDE.
-2. **Nome base**: `effort` obrigatório, dentro da lista da tabela acima.
+2. **Nome base**: `effort` obrigatório, dentro da lista da tabela acima. A única exceção é `gpt-oss-120b`, que aceita ser chamado sem `effort` (medido no agy 1.2.16).
 3. **Slug completo** (`…-high/-medium/-low`, inclusive `gpt-oss-120b-medium`): `effort` proibido, porque o esforço já está no nome.
 
 ## Exemplos
@@ -43,6 +44,9 @@ Fonte: `service/model-catalog.ts` do Antigravity Bridge v1.9.0, verificado contr
 | `{"model":"gemini-3.8-flash","effort":"medium"}` | ✅ equivale a `gemini-3.8-flash-medium` |
 | `{"model":"claude-sonnet-5-5","effort":"low"}` | ✅ equivale a `claude-sonnet-5-5-low` |
 | `{"model":"claude-opus-5-5-high"}` | ✅ |
+| `{"model":"gpt-oss-120b"}` | ✅ effort opcional |
+| `{"model":"gpt-oss-120b","effort":"medium"}` | ✅ |
+| `{"model":"gpt-oss-120b","effort":"low"}` | ❌ só aceita `medium` |
 | `{"model":"gemini-3.8-flash"}` | ❌ exige `effort` (o erro sugere o slug `gemini-3.8-flash-high`) |
 | `{"model":"claude-opus-5-5"}` | ❌ exige `effort` |
 | `{"model":"gemini-3.1-pro","effort":"medium"}` | ❌ 3.1 Pro só aceita `low`/`high` |

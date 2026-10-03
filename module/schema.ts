@@ -58,7 +58,8 @@ export const toolInputSchema = {
       "Modelo do Antigravity. Se omitido, usa o default do IDE. Os slugs completos " +
         "(ex.: 'gemini-3.8-flash-high') já embutem o esforço e dispensam 'effort'. Os " +
         `nomes base (${EFFORT_MODEL_NAMES.map((name) => `'${name}'`).join(", ")}) ` +
-        "exigem 'effort' — e 'gemini-3.1-pro' só aceita low|high. " +
+        "exigem 'effort' — e 'gemini-3.1-pro' só aceita low|high. Exceção: em " +
+        "'gpt-oss-120b' o 'effort' é opcional e só aceita medium. " +
         "Atenção a cotas: modelos gemini-* , claude-* e gpt-* consomem cotas separadas."
     ),
   effort: z
