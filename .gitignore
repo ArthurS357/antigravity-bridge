@@ -10,3 +10,4 @@ scratchpad/
 *.pem
 *.key
 MIGRATION.md
+.claude
