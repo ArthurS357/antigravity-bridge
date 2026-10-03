@@ -2,11 +2,17 @@
 // (initialize -> initialized -> tools/list -> tools/call) so tests exercise
 // the actual transport, not a mocked shortcut around it.
 import { spawn } from "node:child_process";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+/** Every test server logs here, never to the real ~/.mcp-servers log. */
+export const TEST_LOG_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", ".generated", "logs");
 
 export function startServer(serverPath, env = {}) {
   const child = spawn(process.execPath, [serverPath], {
     stdio: ["pipe", "pipe", "pipe"],
-    env: { ...process.env, ...env },
+    // Forced after process.env so a real ANTIGRAVITY_LOG_DIR can't leak in.
+    env: { ...process.env, ANTIGRAVITY_LOG_DIR: TEST_LOG_DIR, ...env },
   });
 
   let stdoutBuf = "";

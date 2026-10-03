@@ -23,6 +23,8 @@ export const ENV_RESUME_ON_TIMEOUT = "AGY_RESUME_ON_TIMEOUT";
 export const ENV_SKIP_PERMISSIONS = "AGY_SKIP_PERMISSIONS";
 /** Overrides the neutral working directory the child is pinned to. */
 export const ENV_CWD = "AGY_CWD";
+/** Overrides the activity-log directory; the test suite points it at test/.generated. */
+export const ENV_LOG_DIR = "ANTIGRAVITY_LOG_DIR";
 
 // --- Working directory -----------------------------------------------------
 
@@ -104,7 +106,10 @@ export const VERSION_MAX_BUFFER_BYTES = 64 * 1024;
 export const MAX_LOG_BYTES = 5 * 1024 * 1024;
 
 // homedir() resolves independent of which env vars a given spawn inherits.
-export const LOG_DIR = join(homedir(), ".mcp-servers", "antigravity-bridge");
+// Read here rather than in config.ts: config.ts imports the logger, which
+// imports this, so reading it there would close an import cycle.
+export const LOG_DIR =
+  process.env[ENV_LOG_DIR]?.trim() || join(homedir(), ".mcp-servers", "antigravity-bridge");
 export const LOG_FILE = join(LOG_DIR, "mcp-activity.log");
 export const LOG_FILE_PREVIOUS = `${LOG_FILE}.1`;
 

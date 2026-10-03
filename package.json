@@ -3,7 +3,7 @@
   "version": "1.9.0",
   "description": "Servidor MCP que delega tarefas autocontidas à CLI headless do Antigravity (agy) a partir do Claude Code.",
   "license": "MIT",
-  "author": "TR57",
+  "author": "ArthurS357",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ArthurS357/antigravity-bridge.git"

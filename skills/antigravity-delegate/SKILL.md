@@ -52,12 +52,12 @@ O `agy` tem as próprias skills e elas **funcionam em headless** (medido, inclus
 ## Escolha de modelo (resumo)
 
 - Sem preferência: **omita `model`** (default do IDE).
-- Slug completo (`gemini-3.8-flash-high`, `claude-sonnet-4-6`…): **não** passe `effort`.
-- Nome base (`gemini-3.8-flash`, `gemini-3.1-pro`…): `effort` **obrigatório**. `gemini-3.1-pro` só aceita `low`/`high`.
-- Mecânico e volumoso → Flash `-low`/`-medium`. Raciocínio difícil → `gemini-3.1-pro-high` ou `claude-opus-4-6-thinking`.
+- Slug completo (`gemini-3.8-flash-high`, `claude-sonnet-5-5-medium`…): **não** passe `effort`.
+- Nome base (`gemini-3.8-flash`, `claude-opus-5-5`, `gemini-3.1-pro`…): `effort` **obrigatório**. `gemini-3.1-pro` só aceita `low`/`high`.
+- Mecânico e volumoso → Flash `-low`/`-medium`. Raciocínio difícil → `gemini-3.1-pro-high` ou `claude-opus-5-5-high`.
 - Combinação inválida falha na hora, sem custo.
 
-Catálogo completo dos 18 valores e exemplos válidos/inválidos: [reference/models.md](reference/models.md).
+Catálogo completo dos 24 valores e exemplos válidos/inválidos: [reference/models.md](reference/models.md).
 
 ## Timeout (resumo)
 

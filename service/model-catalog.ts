@@ -3,12 +3,18 @@
 // Every rule below was confirmed empirically — none of it is inferred. The
 // effort rules were established on agy 1.1.12/1.1.13; the slug list and the
 // 3.8 rules were re-verified against `agy models` on 1.2.5, which RETIRED the
-// entire gemini-3.5-flash family and introduced gemini-3.8-flash:
+// entire gemini-3.5-flash family and introduced gemini-3.8-flash. On
+// 2026-10-03, still on 1.2.16, the catalog changed server-side: the
+// claude-*-4-6 slugs were retired and claude-opus-5-5 / claude-sonnet-5-5
+// arrived as effort bases, behaving exactly like gemini-3.8-flash:
 //
 //   --model gemini-3.8-flash                -> "requires --effort (available: low, medium, high)"
+//   --model claude-opus-5-5                 -> "requires --effort (available: low, medium, high)"
+//   --model claude-sonnet-5-5 --effort low  -> SUCCESS
 //   --model gemini-3.1-pro   --effort medium-> "has no \"medium\" effort (available: low, high)"
-//   --model claude-sonnet-4-6 --effort high -> "--effort is not supported for model"
 //   --model gemini-3.8-flash-high --effort low -> "conflicts with --effort=low"
+//   --model gpt-oss-120b-medium --effort high  -> "conflicts with --effort=high"
+//   --model claude-sonnet-4-6               -> "is not recognized as a known model"
 //   --effort low (no --model)               -> SUCCESS (applies to the IDE default)
 //
 // Offering a slug the CLI no longer knows is not a harmless stale entry: it
@@ -25,16 +31,18 @@ const EFFORT_MODELS = {
   "gemini-3.7-flash": ["low", "medium", "high"],
   "gemini-3.6-flash": ["low", "medium", "high"],
   "gemini-3.1-pro": ["low", "high"],
+  "claude-opus-5-5": ["low", "medium", "high"],
+  "claude-sonnet-5-5": ["low", "medium", "high"],
 } as const satisfies Record<string, readonly EffortLevel[]>;
 
 type EffortModel = keyof typeof EFFORT_MODELS;
 
-/** Models that take no --effort at all (as opposed to embedding one). */
-const FIXED_MODELS = [
-  "claude-sonnet-4-6",
-  "claude-opus-4-6-thinking",
-  "gpt-oss-120b-medium",
-] as const;
+/**
+ * Slugs whose base name is not offered here. agy's gpt-oss-120b base accepts
+ * only "medium" and does NOT require --effort, a rule no other model follows,
+ * so only the full slug is exposed.
+ */
+const FIXED_MODELS = ["gpt-oss-120b-medium"] as const;
 
 /** Full slugs exactly as printed by `agy models` — effort already baked in. */
 export const CANONICAL_MODELS = [
@@ -49,8 +57,12 @@ export const CANONICAL_MODELS = [
   "gemini-3.6-flash-low",
   "gemini-3.1-pro-high",
   "gemini-3.1-pro-low",
-  "claude-sonnet-4-6",
-  "claude-opus-4-6-thinking",
+  "claude-opus-5-5-low",
+  "claude-opus-5-5-medium",
+  "claude-opus-5-5-high",
+  "claude-sonnet-5-5-low",
+  "claude-sonnet-5-5-medium",
+  "claude-sonnet-5-5-high",
   "gpt-oss-120b-medium",
 ] as const;
 
@@ -61,6 +73,8 @@ export const SELECTABLE_MODELS = [
   "gemini-3.7-flash",
   "gemini-3.6-flash",
   "gemini-3.1-pro",
+  "claude-opus-5-5",
+  "claude-sonnet-5-5",
 ] as const;
 
 export type SelectableModel = (typeof SELECTABLE_MODELS)[number];
@@ -149,13 +163,10 @@ export function buildModelArgs(
   }
 
   if (effort !== undefined) {
-    // Two distinct reasons agy rejects the pairing — say which one applies.
-    const reason = (FIXED_MODELS as readonly string[]).includes(model)
-      ? `O modelo '${model}' não suporta o parâmetro effort.`
-      : `O modelo '${model}' já embute o nível de esforço no próprio nome.`;
+    // Every remaining full slug embeds its effort: agy answers "conflicts with --effort".
     return {
       ok: false,
-      error: `${reason} Use um modelo base (${EFFORT_MODEL_NAMES.join(", ")}) se quiser controlar o esforço separadamente.`,
+      error: `O modelo '${model}' já embute o nível de esforço no próprio nome. Use um modelo base (${EFFORT_MODEL_NAMES.join(", ")}) se quiser controlar o esforço separadamente.`,
     };
   }
 

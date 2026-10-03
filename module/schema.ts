@@ -10,7 +10,7 @@ import {
   MIN_TIMEOUT_MS,
 } from "../src/constants.ts";
 import type { AgyCapabilities } from "../src/types.ts";
-import { EFFORT_LEVELS, SELECTABLE_MODELS } from "../service/model-catalog.ts";
+import { EFFORT_LEVELS, EFFORT_MODEL_NAMES, SELECTABLE_MODELS } from "../service/model-catalog.ts";
 
 export const TOOL_TITLE = "Executar tarefa no Antigravity";
 export const RESUME_TOOL_TITLE = "Retomar conversa do Antigravity";
@@ -57,8 +57,8 @@ export const toolInputSchema = {
     .describe(
       "Modelo do Antigravity. Se omitido, usa o default do IDE. Os slugs completos " +
         "(ex.: 'gemini-3.8-flash-high') já embutem o esforço e dispensam 'effort'. Os " +
-        "nomes base ('gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', " +
-        "'gemini-3.1-pro') exigem 'effort' — e 'gemini-3.1-pro' só aceita low|high. " +
+        `nomes base (${EFFORT_MODEL_NAMES.map((name) => `'${name}'`).join(", ")}) ` +
+        "exigem 'effort' — e 'gemini-3.1-pro' só aceita low|high. " +
         "Atenção a cotas: modelos gemini-* , claude-* e gpt-* consomem cotas separadas."
     ),
   effort: z

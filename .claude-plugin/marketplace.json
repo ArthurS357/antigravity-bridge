@@ -2,7 +2,7 @@
   "name": "antigravity-bridge",
   "description": "Marketplace do Antigravity Bridge: ponte MCP do Claude Code para a CLI headless do Antigravity (agy).",
   "owner": {
-    "name": "TR57"
+    "name": "ArthurS357"
   },
   "plugins": [
     {

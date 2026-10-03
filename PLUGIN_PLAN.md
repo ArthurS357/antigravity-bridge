@@ -24,7 +24,7 @@ antigravity-bridge/
   "name": "antigravity-bridge",
   "version": "1.9.0",
   "description": "Delega tarefas autocontidas ao Antigravity (agy) via MCP, com a skill que ensina quando e como delegar.",
-  "author": { "name": "TR57" },
+  "author": { "name": "ArthurS357" },
   "license": "MIT",
   "mcpServers": {
     "antigravity-bridge": { "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/dist/server.mjs"] }
@@ -56,12 +56,12 @@ Node.js ≥ 22.18.0 (o bundle é ESM para Node 22), `agy` no `PATH` e autenticad
 
 ## Passos para publicar
 
-1. ~~Preencher `author`, `repository`, titular do `LICENSE` e `owner.name` do marketplace~~ (feito: TR57).
+1. ~~Preencher `author`, `repository`, titular do `LICENSE` e `owner.name` do marketplace~~ (feito: ArthurS357).
 2. ~~Adicionar `npm run build:plugin` (esbuild como devDependency), commitar `dist/server.mjs` e criar o teste que reconstrói e compara~~ (feito: `test/plugin.test.mjs`, que também confere a versão do `plugin.json`).
 3. ~~Criar `.claude-plugin/plugin.json` e `marketplace.json`~~ (feito).
 4. ~~`claude plugin validate`~~ (feito: marketplace e plugin passam sem avisos).
 5. ~~Teste local com `--plugin-dir`~~ (feito: as duas ferramentas listam com o novo prefixo, a skill aparece como `antigravity-bridge:antigravity-delegate`, e uma chamada real devolveu `ok`). O registro de usuário foi removido só durante o teste e restaurado em seguida.
-6. Publicar no GitHub (decisão do usuário). Depois: `/plugin marketplace add ArthurS357/antigravity-bridge` e `/plugin install antigravity-bridge@antigravity-bridge`. O dono no GitHub é `ArthurS357` (remote `origin`); `TR57` é o nome de autor.
+6. Publicar no GitHub (decisão do usuário). Depois: `/plugin marketplace add ArthurS357/antigravity-bridge` e `/plugin install antigravity-bridge@antigravity-bridge`.
 7. Instalar de verdade numa conta limpa e repetir as checagens: o servidor conecta, as duas ferramentas listam e a skill aparece.
 
 ## O que ainda falta
@@ -69,4 +69,4 @@ Node.js ≥ 22.18.0 (o bundle é ESM para Node 22), `agy` no `PATH` e autenticad
 - **Instalação via marketplace não foi testada** (só `--plugin-dir`): depende do push.
 - **CI:** `npm test` (inclui a checagem de `dist/`), `tsc --noEmit` e `claude plugin validate`.
 - **Versão em dois lugares** (`package.json` e `plugin.json`): o teste pega divergência, mas o bump continua manual.
-- **Catálogo de modelos:** ao subir, o servidor avisa que o `agy` reporta modelos fora do enum (`claude-opus-5-5-*`, `claude-sonnet-5-5-*`) e que deixou de reportar `claude-sonnet-4-6` e `claude-opus-4-6-thinking`. Fora do escopo do plugin.
+- ~~**Catálogo de modelos** desatualizado (`claude-*-4-6` aposentados, `claude-*-5-5-*` novos)~~ (feito em 2026-10-03, contra `agy models` do 1.2.16).

@@ -21451,6 +21451,7 @@ var ENV_TIMEOUT_MS = "AGY_TIMEOUT_MS";
 var ENV_RESUME_ON_TIMEOUT = "AGY_RESUME_ON_TIMEOUT";
 var ENV_SKIP_PERMISSIONS = "AGY_SKIP_PERMISSIONS";
 var ENV_CWD = "AGY_CWD";
+var ENV_LOG_DIR = "ANTIGRAVITY_LOG_DIR";
 var NEUTRAL_CWD = join(tmpdir(), "antigravity-bridge-cwd");
 var DEFAULT_TIMEOUT_MS = 6e5;
 var MIN_TIMEOUT_MS = 1e4;
@@ -21464,7 +21465,7 @@ var MAX_BUFFER_BYTES = 50 * 1024 * 1024;
 var PROBE_MAX_BUFFER_BYTES = 1024 * 1024;
 var VERSION_MAX_BUFFER_BYTES = 64 * 1024;
 var MAX_LOG_BYTES = 5 * 1024 * 1024;
-var LOG_DIR = join(homedir(), ".mcp-servers", "antigravity-bridge");
+var LOG_DIR = process.env[ENV_LOG_DIR]?.trim() || join(homedir(), ".mcp-servers", "antigravity-bridge");
 var LOG_FILE = join(LOG_DIR, "mcp-activity.log");
 var LOG_FILE_PREVIOUS = `${LOG_FILE}.1`;
 var RESUME_PROMPT = "Recupere a resposta final que voc\xEA j\xE1 produziu nesta conversa, sem refazer o trabalho e sem executar novas ferramentas.";
@@ -21658,13 +21659,11 @@ var EFFORT_MODELS = {
   "gemini-3.8-flash": ["low", "medium", "high"],
   "gemini-3.7-flash": ["low", "medium", "high"],
   "gemini-3.6-flash": ["low", "medium", "high"],
-  "gemini-3.1-pro": ["low", "high"]
+  "gemini-3.1-pro": ["low", "high"],
+  "claude-opus-5-5": ["low", "medium", "high"],
+  "claude-sonnet-5-5": ["low", "medium", "high"]
 };
-var FIXED_MODELS = [
-  "claude-sonnet-4-6",
-  "claude-opus-4-6-thinking",
-  "gpt-oss-120b-medium"
-];
+var FIXED_MODELS = ["gpt-oss-120b-medium"];
 var CANONICAL_MODELS = [
   "gemini-3.8-flash-high",
   "gemini-3.8-flash-medium",
@@ -21677,8 +21676,12 @@ var CANONICAL_MODELS = [
   "gemini-3.6-flash-low",
   "gemini-3.1-pro-high",
   "gemini-3.1-pro-low",
-  "claude-sonnet-4-6",
-  "claude-opus-4-6-thinking",
+  "claude-opus-5-5-low",
+  "claude-opus-5-5-medium",
+  "claude-opus-5-5-high",
+  "claude-sonnet-5-5-low",
+  "claude-sonnet-5-5-medium",
+  "claude-sonnet-5-5-high",
   "gpt-oss-120b-medium"
 ];
 var SELECTABLE_MODELS = [
@@ -21686,7 +21689,9 @@ var SELECTABLE_MODELS = [
   "gemini-3.8-flash",
   "gemini-3.7-flash",
   "gemini-3.6-flash",
-  "gemini-3.1-pro"
+  "gemini-3.1-pro",
+  "claude-opus-5-5",
+  "claude-sonnet-5-5"
 ];
 var EFFORT_MODEL_NAMES = Object.keys(EFFORT_MODELS);
 function assertCatalogConsistency() {
@@ -21741,10 +21746,9 @@ function buildModelArgs(model, effort) {
     return { ok: true, args: [`--model=${model}`, `--effort=${effort}`] };
   }
   if (effort !== void 0) {
-    const reason = FIXED_MODELS.includes(model) ? `O modelo '${model}' n\xE3o suporta o par\xE2metro effort.` : `O modelo '${model}' j\xE1 embute o n\xEDvel de esfor\xE7o no pr\xF3prio nome.`;
     return {
       ok: false,
-      error: `${reason} Use um modelo base (${EFFORT_MODEL_NAMES.join(", ")}) se quiser controlar o esfor\xE7o separadamente.`
+      error: `O modelo '${model}' j\xE1 embute o n\xEDvel de esfor\xE7o no pr\xF3prio nome. Use um modelo base (${EFFORT_MODEL_NAMES.join(", ")}) se quiser controlar o esfor\xE7o separadamente.`
     };
   }
   return { ok: true, args: [`--model=${model}`] };
@@ -22061,7 +22065,7 @@ var toolInputSchema = {
   json_output: external_exports.boolean().optional().describe("Se true, pede ao agy uma resposta em JSON. Para JSON garantido por schema, use json_schema."),
   json_schema: external_exports.string().optional().describe("JSON Schema (string ou caminho de arquivo) que for\xE7a sa\xEDda estruturada nativa via --json-schema."),
   model: external_exports.enum(SELECTABLE_MODELS).optional().describe(
-    "Modelo do Antigravity. Se omitido, usa o default do IDE. Os slugs completos (ex.: 'gemini-3.8-flash-high') j\xE1 embutem o esfor\xE7o e dispensam 'effort'. Os nomes base ('gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.1-pro') exigem 'effort' \u2014 e 'gemini-3.1-pro' s\xF3 aceita low|high. Aten\xE7\xE3o a cotas: modelos gemini-* , claude-* e gpt-* consomem cotas separadas."
+    `Modelo do Antigravity. Se omitido, usa o default do IDE. Os slugs completos (ex.: 'gemini-3.8-flash-high') j\xE1 embutem o esfor\xE7o e dispensam 'effort'. Os nomes base (${EFFORT_MODEL_NAMES.map((name) => `'${name}'`).join(", ")}) exigem 'effort' \u2014 e 'gemini-3.1-pro' s\xF3 aceita low|high. Aten\xE7\xE3o a cotas: modelos gemini-* , claude-* e gpt-* consomem cotas separadas.`
   ),
   effort: external_exports.enum(EFFORT_LEVELS).optional().describe(
     "N\xEDvel de racioc\xEDnio. V\xE1lido sozinho (aplica ao modelo default) ou junto de um nome base. N\xE3o pode ser combinado com um slug completo, que j\xE1 embute o esfor\xE7o."

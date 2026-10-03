@@ -73,11 +73,11 @@ Use **caminhos absolutos** no prompt e em `context_files`: o `agy` não roda no 
 
 ### Modelos e `effort`
 
-`model` aceita 18 valores: 14 slugs completos, com o esforço já embutido (`gemini-3.8-flash-high`, `gemini-3.1-pro-low`, `claude-sonnet-4-6`, `claude-opus-4-6-thinking`, `gpt-oss-120b-medium`, …), e 4 nomes base (`gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.1-pro`). Regras:
+`model` aceita 24 valores: 18 slugs completos, com o esforço já embutido (`gemini-3.8-flash-high`, `gemini-3.1-pro-low`, `claude-opus-5-5-high`, `claude-sonnet-5-5-medium`, `gpt-oss-120b-medium`, …), e 6 nomes base (`gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.1-pro`, `claude-opus-5-5`, `claude-sonnet-5-5`). Catálogo verificado contra `agy models` no agy 1.2.16 em 2026-10-03, quando os `claude-*-4-6` foram aposentados. Regras:
 
 - Sem `model`: vale o default do IDE, e `effort` sozinho (`low`/`medium`/`high`) se aplica a ele.
 - **Nome base** exige `effort`; o `gemini-3.1-pro` só aceita `low` e `high`.
-- **Slug completo** não aceita `effort`, porque o esforço já está no nome. Claude e GPT não suportam `effort`.
+- **Slug completo** não aceita `effort`, porque o esforço já está no nome (vale também para `gpt-oss-120b-medium`).
 - Combinação inválida é rejeitada localmente, antes de spawnar o `agy` (sem custo).
 
 A lista completa e exemplos válidos e inválidos estão em [`skills/antigravity-delegate/reference/models.md`](skills/antigravity-delegate/reference/models.md).
@@ -97,7 +97,7 @@ Nenhuma flag nova foi necessária.
 
 ## Log de atividade e privacidade
 
-A ponte grava **o prompt enviado e a resposta recebida** em `~/.mcp-servers/antigravity-bridge/mcp-activity.log` (rotacionado em `mcp-activity.log.1` aos 5 MiB). O diretório é fixo na sua pasta pessoal, independe de onde o código está instalado, e o arquivo cresce com o conteúdo das suas tarefas: **não o publique nem o anexe a issues sem revisar**. O `.gitignore` do repositório já o exclui.
+A ponte grava **o prompt enviado e a resposta recebida** em `~/.mcp-servers/antigravity-bridge/mcp-activity.log` (rotacionado em `mcp-activity.log.1` aos 5 MiB). O diretório fica na sua pasta pessoal e independe de onde o código está instalado (`ANTIGRAVITY_LOG_DIR` o sobrepõe; a suíte de testes usa isso para gravar em `test/.generated/logs/`), e o arquivo cresce com o conteúdo das suas tarefas: **não o publique nem o anexe a issues sem revisar**. O `.gitignore` do repositório já o exclui.
 
 ## Arquitetura
 
@@ -192,6 +192,7 @@ O `agy` lê as permissões da CLI de **`~/.gemini/antigravity-cli/settings.json`
 | `AGY_TIMEOUT_MS` | `600000` (10 min) | Tempo máximo de execução de uma tarefa. Alimenta o `--print-timeout` do próprio `agy`; o backstop do Node fica 10s acima (`AGY_TIMEOUT_MS + 10_000`), para que o `agy` sempre consiga emitir o envelope JSON antes de ser morto — é dele que sai o `conversation_id` usado na retomada. Aceita de `10000` a `3600000` (1 h); fora da faixa, não numérico ou vazio cai no padrão com aviso no stderr. Pode ser sobreposto por chamada com `timeout_ms`. |
 | `AGY_RESUME_ON_TIMEOUT` | `false` (desligado) | Só `true` (case-insensitive) habilita a retomada automática após timeout. Veja a seção dedicada abaixo — **isso gasta tokens**. |
 | `AGY_SKIP_PERMISSIONS` | (desligado) | Somente `true` ativa `--dangerously-skip-permissions`. Veja o alerta de segurança acima. Aplicado tanto na chamada original quanto numa eventual retomada. |
+| `ANTIGRAVITY_LOG_DIR` | `~/.mcp-servers/antigravity-bridge` | Diretório do log de atividade. Existe para a suíte de testes não gravar no log real; vazio cai no padrão. |
 | `AGY_CWD` | `%TEMP%/antigravity-bridge-cwd` | Diretório em que o `agy` é executado. O padrão é um diretório neutro e vazio: o `agy` descobre `GEMINI.md`, `AGENTS.md` e `.agents/rules/*.md` a partir do próprio cwd, então herdar o do cliente MCP faria o projeto onde o orquestrador estava entrar silenciosamente em toda tarefa delegada. Consequência: **caminhos relativos ao seu projeto não resolvem** — use caminhos absolutos no prompt e em `context_files`. As regras globais do usuário (`~/.gemini/GEMINI.md`) e as skills globais são carregadas independentemente do cwd e não são afetadas. |
 
 O estado efetivo é impresso no startup:
@@ -322,7 +323,7 @@ Mover a pasta do código **não** muda o registro do MCP se ele foi feito pelo n
 3. **`npm install`** na nova pasta, se `node_modules` não foi junto. Valide com `npm test`.
 4. **Reinicie o Claude Code.** O servidor é lido no startup.
 
-O que **não** muda: o log de atividade (fixo em `~/.mcp-servers/antigravity-bridge/`), as variáveis de ambiente do registro e a skill instalada em `~/.claude/skills/`.
+O que **não** muda: o log de atividade (em `~/.mcp-servers/antigravity-bridge/`, salvo `ANTIGRAVITY_LOG_DIR`), as variáveis de ambiente do registro e a skill instalada em `~/.claude/skills/`.
 
 O que se perde: o Claude Code guarda o histórico de conversas e a confiança na pasta pelo **caminho do projeto**. Depois de mover, `claude -c` e a lista de conversas não mostram as sessões antigas, e a pasta nova pede confirmação de confiança de novo. O código e o registro do MCP não são afetados.
 

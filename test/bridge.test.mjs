@@ -8,13 +8,13 @@
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, rmSync, existsSync, mkdirSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join, dirname, relative } from "node:path";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 import { buildTestServer, SOURCE_DIRS } from "./helpers/build-test-server.mjs";
-import { startServer, waitForStderr } from "./helpers/mcp-client.mjs";
+import { startServer, waitForStderr, TEST_LOG_DIR } from "./helpers/mcp-client.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = join(HERE, "..");
@@ -570,10 +570,32 @@ describe("construção de argumentos", () => {
     assert.equal(all.filter(isPrimary).length, 0);
   });
 
-  test("modelo de effort fixo (claude) + effort é rejeitado com o motivo correto", async () => {
-    const { res, all } = await argvFor({ prompt: "p", model: "claude-sonnet-4-6", effort: "high" });
-    assert.ok(isErr(res) && textOf(res).includes("não suporta o parâmetro effort"), textOf(res));
+  test("gpt-oss-120b-medium + effort é rejeitado: o esforço já está no nome", async () => {
+    const { res, all } = await argvFor({ prompt: "p", model: "gpt-oss-120b-medium", effort: "high" });
+    assert.ok(isErr(res) && textOf(res).includes("já embute o nível de esforço"), textOf(res));
     assert.equal(all.filter(isPrimary).length, 0);
+  });
+
+  test("claude-opus-5-5 e claude-sonnet-5-5 são bases: com effort viram --model= e --effort=", async () => {
+    for (const model of ["claude-opus-5-5", "claude-sonnet-5-5"]) {
+      const { primary } = await argvFor({ prompt: "p", model, effort: "high" });
+      assert.ok(primary.includes(`--model=${model}`), JSON.stringify(primary));
+      assert.ok(primary.includes("--effort=high"), JSON.stringify(primary));
+    }
+  });
+
+  test("claude-opus-5-5 sem effort é rejeitado localmente", async () => {
+    const { res, all } = await argvFor({ prompt: "p", model: "claude-opus-5-5" });
+    assert.ok(isErr(res) && textOf(res).includes("exige o parâmetro effort"), textOf(res));
+    assert.equal(all.filter(isPrimary).length, 0);
+  });
+
+  test("slugs claude-*-4-6 aposentados são recusados pelo schema", async () => {
+    for (const model of ["claude-sonnet-4-6", "claude-opus-4-6-thinking"]) {
+      const { res, all } = await argvFor({ prompt: "p", model });
+      assert.ok(isErr(res) || res?.error !== undefined, `${model}: ${textOf(res)}`);
+      assert.equal(all.filter(isPrimary).length, 0);
+    }
   });
 
   test("json_schema vira --json-schema=<valor> e suprime o preâmbulo textual", async () => {
@@ -668,7 +690,7 @@ describe("detecção de capabilities (F-11)", () => {
   test("sem --model: parâmetro rejeitado sem spawnar processo", async () => {
     await withServer({ FAKE_HELP_OMIT: "--model" }, async (server, readArgs) => {
       await server.handshake();
-      const res = await server.call({ prompt: "p", model: "claude-sonnet-4-6" });
+      const res = await server.call({ prompt: "p", model: "claude-sonnet-5-5-high" });
       assert.ok(isErr(res) && textOf(res).includes("não expõe --model"), textOf(res));
       assert.equal(readArgs().filter(isPrimary).length, 0);
     });
@@ -1462,5 +1484,17 @@ describe("premissas de segurança", () => {
         assert.ok(!readArgs().flat().includes("--dangerously-skip-permissions"));
       }
     );
+  });
+});
+
+// ===========================================================================
+describe("isolamento do log", () => {
+  test("chamadas de teste gravam em test/.generated/logs, não no log real", async () => {
+    const marker = `marcador-${randomUUID()}`;
+    await argvFor({ prompt: marker });
+    const testLog = join(TEST_LOG_DIR, "mcp-activity.log");
+    assert.ok(readFileSync(testLog, "utf8").includes(marker), "marcador ausente do log de teste");
+    const realLog = join(homedir(), ".mcp-servers", "antigravity-bridge", "mcp-activity.log");
+    assert.ok(!existsSync(realLog) || !readFileSync(realLog, "utf8").includes(marker), "marcador vazou para o log real");
   });
 });
