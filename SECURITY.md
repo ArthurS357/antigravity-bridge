@@ -39,7 +39,7 @@ A redução real de superfície fica nas permissões do próprio `agy`, em `~/.g
 
 ### Log de atividade
 
-`~/.mcp-servers/antigravity-bridge/mcp-activity.log` (e `.1`; o diretório muda com `ANTIGRAVITY_LOG_DIR`) guarda **cada prompt e cada resposta em texto puro**. Se o `agy` ler uma credencial e citá-la, ela fica no log, e também na conversa do orquestrador. O `.gitignore` exclui o log. Não o anexe a issues sem revisar.
+`~/.antigravity-bridge/logs/mcp-activity.log` (e `.1`; o diretório muda com `ANTIGRAVITY_LOG_DIR`) guarda **cada prompt e cada resposta em texto puro**. Se o `agy` ler uma credencial e citá-la, ela fica no log, e também na conversa do orquestrador. O `.gitignore` exclui o log. Não o anexe a issues sem revisar.
 
 ## Incidente de 2026-10-03: chave de API em log de sessão
 

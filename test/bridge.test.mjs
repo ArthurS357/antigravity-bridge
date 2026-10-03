@@ -1514,7 +1514,32 @@ describe("isolamento do log", () => {
     await argvFor({ prompt: marker });
     const testLog = join(TEST_LOG_DIR, "mcp-activity.log");
     assert.ok(readFileSync(testLog, "utf8").includes(marker), "marcador ausente do log de teste");
-    const realLog = join(homedir(), ".mcp-servers", "antigravity-bridge", "mcp-activity.log");
-    assert.ok(!existsSync(realLog) || !readFileSync(realLog, "utf8").includes(marker), "marcador vazou para o log real");
+    for (const realDir of [join(homedir(), ".antigravity-bridge", "logs"), join(homedir(), ".mcp-servers", "antigravity-bridge")]) {
+      const realLog = join(realDir, "mcp-activity.log");
+      assert.ok(!existsSync(realLog) || !readFileSync(realLog, "utf8").includes(marker), `marcador vazou para ${realLog}`);
+    }
+  });
+
+  test("ANTIGRAVITY_LOG_DIR definida: anunciada no startup", async () => {
+    await withServer({ FAKE_MODE: "ok" }, async (server) => {
+      await waitForStderr(server, "logs em:");
+      assert.ok(server.stderr().includes(`logs em: ${TEST_LOG_DIR}`), server.stderr());
+    });
+  });
+
+  test("ANTIGRAVITY_LOG_DIR vazia: cai em ~/.antigravity-bridge/logs e cria o diretório", async () => {
+    // A throwaway home keeps the fallback from touching the real one.
+    const fakeHome = join(tmpdir(), `antigravity-bridge-home-${randomUUID()}`);
+    mkdirSync(fakeHome, { recursive: true });
+    try {
+      await withServer({ FAKE_MODE: "ok", ANTIGRAVITY_LOG_DIR: "", USERPROFILE: fakeHome, HOME: fakeHome }, async (server) => {
+        await waitForStderr(server, "logs em:");
+        const expected = join(fakeHome, ".antigravity-bridge", "logs");
+        assert.ok(server.stderr().includes(`logs em: ${expected}`), server.stderr());
+        assert.ok(existsSync(expected), "diretório padrão não foi criado");
+      });
+    } finally {
+      rmSync(fakeHome, { recursive: true, force: true });
+    }
   });
 });

@@ -105,11 +105,17 @@ export const VERSION_MAX_BUFFER_BYTES = 64 * 1024;
 /** Rotate the activity log once it crosses this size (F-10). */
 export const MAX_LOG_BYTES = 5 * 1024 * 1024;
 
-// homedir() resolves independent of which env vars a given spawn inherits.
+/**
+ * Default activity-log directory. In the home dir, not the package dir, so the
+ * log survives the code being moved or reinstalled (it used to sit next to an
+ * old install path, ~/.mcp-servers/antigravity-bridge, which kept that folder
+ * alive after the code left it).
+ */
+const DEFAULT_LOG_DIR = join(homedir(), ".antigravity-bridge", "logs");
+
 // Read here rather than in config.ts: config.ts imports the logger, which
 // imports this, so reading it there would close an import cycle.
-export const LOG_DIR =
-  process.env[ENV_LOG_DIR]?.trim() || join(homedir(), ".mcp-servers", "antigravity-bridge");
+export const LOG_DIR = process.env[ENV_LOG_DIR]?.trim() || DEFAULT_LOG_DIR;
 export const LOG_FILE = join(LOG_DIR, "mcp-activity.log");
 export const LOG_FILE_PREVIOUS = `${LOG_FILE}.1`;
 

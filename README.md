@@ -80,6 +80,8 @@ Use **caminhos absolutos** no prompt e em `context_files`: o `agy` não roda no 
 - **Slug completo** não aceita `effort`, porque o esforço já está no nome (vale também para `gpt-oss-120b-medium`).
 - Combinação inválida é rejeitada localmente, antes de spawnar o `agy` (sem custo).
 
+> ⚠️ **Depreciação:** `gpt-oss-120b` será removido do Antigravity em 02/11/2026. Após essa data, use outro modelo. A detecção de drift do servidor avisa quando o `agy` deixar de listá-lo.
+
 A lista completa e exemplos válidos e inválidos estão em [`skills/antigravity-delegate/reference/models.md`](skills/antigravity-delegate/reference/models.md).
 
 ## Skills do `agy`
@@ -97,7 +99,16 @@ Nenhuma flag nova foi necessária.
 
 ## Log de atividade e privacidade
 
-A ponte grava **o prompt enviado e a resposta recebida** em `~/.mcp-servers/antigravity-bridge/mcp-activity.log` (rotacionado em `mcp-activity.log.1` aos 5 MiB). O diretório fica na sua pasta pessoal e independe de onde o código está instalado (`ANTIGRAVITY_LOG_DIR` o sobrepõe; a suíte de testes usa isso para gravar em `test/.generated/logs/`), e o arquivo cresce com o conteúdo das suas tarefas: **não o publique nem o anexe a issues sem revisar**. O `.gitignore` do repositório já o exclui.
+A ponte grava **o prompt enviado e a resposta recebida** em `mcp-activity.log` (rotacionado em `mcp-activity.log.1` aos 5 MiB), dentro do diretório de log:
+
+1. `ANTIGRAVITY_LOG_DIR`, se definida e não vazia: usada exatamente como está;
+2. senão, `~/.antigravity-bridge/logs/` (no Windows, `%USERPROFILE%.antigravity-bridgelogs`).
+
+O padrão fica na sua pasta pessoal, não na do pacote, para sobreviver se o código for movido ou reinstalado. O diretório é criado no startup se não existir, e o caminho efetivo aparece uma vez no stderr: `[antigravity-bridge] logs em: <caminho>`. A suíte de testes força `ANTIGRAVITY_LOG_DIR` para `test/.generated/logs/`.
+
+Para mudar o local, defina a variável no registro do MCP (`claude mcp add … --env ANTIGRAVITY_LOG_DIR=<pasta> -- antigravity-mcp`) e reinicie o Claude Code. Para levar o histórico, copie `mcp-activity.log*` da pasta antiga para a nova antes de reiniciar. Até a v1.9.0 o padrão era `~/.mcp-servers/antigravity-bridge/`; se o seu log antigo está lá, copie-o para `~/.antigravity-bridge/logs/` (ou recomece do zero: o servidor cria um log novo).
+
+O arquivo cresce com o conteúdo das suas tarefas: **não o publique nem o anexe a issues sem revisar**. Use uma pasta fora de qualquer repositório; o `.gitignore` deste já exclui `mcp-activity.log*`.
 
 ## Arquitetura
 
@@ -192,7 +203,7 @@ O `agy` lê as permissões da CLI de **`~/.gemini/antigravity-cli/settings.json`
 | `AGY_TIMEOUT_MS` | `600000` (10 min) | Tempo máximo de execução de uma tarefa. Alimenta o `--print-timeout` do próprio `agy`; o backstop do Node fica 10s acima (`AGY_TIMEOUT_MS + 10_000`), para que o `agy` sempre consiga emitir o envelope JSON antes de ser morto — é dele que sai o `conversation_id` usado na retomada. Aceita de `10000` a `3600000` (1 h); fora da faixa, não numérico ou vazio cai no padrão com aviso no stderr. Pode ser sobreposto por chamada com `timeout_ms`. |
 | `AGY_RESUME_ON_TIMEOUT` | `false` (desligado) | Só `true` (case-insensitive) habilita a retomada automática após timeout. Veja a seção dedicada abaixo — **isso gasta tokens**. |
 | `AGY_SKIP_PERMISSIONS` | (desligado) | Somente `true` ativa `--dangerously-skip-permissions`. Veja o alerta de segurança acima. Aplicado tanto na chamada original quanto numa eventual retomada. |
-| `ANTIGRAVITY_LOG_DIR` | `~/.mcp-servers/antigravity-bridge` | Diretório do log de atividade. Existe para a suíte de testes não gravar no log real; vazio cai no padrão. |
+| `ANTIGRAVITY_LOG_DIR` | `~/.antigravity-bridge/logs` | Diretório do log de atividade. Se definida, sobrepõe o padrão; vazia cai no padrão. O caminho efetivo é anunciado no stderr (`logs em: …`). Veja "Log de atividade e privacidade". |
 | `AGY_CWD` | `%TEMP%/antigravity-bridge-cwd` | Diretório em que o `agy` é executado. O padrão é um diretório neutro e vazio: o `agy` descobre `GEMINI.md`, `AGENTS.md` e `.agents/rules/*.md` a partir do próprio cwd, então herdar o do cliente MCP faria o projeto onde o orquestrador estava entrar silenciosamente em toda tarefa delegada. Consequência: **caminhos relativos ao seu projeto não resolvem** — use caminhos absolutos no prompt e em `context_files`. As regras globais do usuário (`~/.gemini/GEMINI.md`) e as skills globais são carregadas independentemente do cwd e não são afetadas. |
 
 O estado efetivo é impresso no startup:
@@ -323,7 +334,7 @@ Mover a pasta do código **não** muda o registro do MCP se ele foi feito pelo n
 3. **`npm install`** na nova pasta, se `node_modules` não foi junto. Valide com `npm test`.
 4. **Reinicie o Claude Code.** O servidor é lido no startup.
 
-O que **não** muda: o log de atividade (em `~/.mcp-servers/antigravity-bridge/`, salvo `ANTIGRAVITY_LOG_DIR`), as variáveis de ambiente do registro e a skill instalada em `~/.claude/skills/`.
+O que **não** muda: o log de atividade (em `~/.antigravity-bridge/logs/`, salvo `ANTIGRAVITY_LOG_DIR`), as variáveis de ambiente do registro e a skill instalada em `~/.claude/skills/`.
 
 O que se perde: o Claude Code guarda o histórico de conversas e a confiança na pasta pelo **caminho do projeto**. Depois de mover, `claude -c` e a lista de conversas não mostram as sessões antigas, e a pasta nova pede confirmação de confiança de novo. O código e o registro do MCP não são afetados.
 

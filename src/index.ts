@@ -22,6 +22,7 @@ import {
 import {
   ENV_RESUME_ON_TIMEOUT,
   ENV_TIMEOUT_MS,
+  LOG_DIR,
   MAX_TIMEOUT_MS,
   MIN_TIMEOUT_MS,
   SERVER_NAME,
@@ -42,6 +43,7 @@ function announceReady(capabilities: AgyCapabilities): void {
       `faixa aceita ${MIN_TIMEOUT_MS}-${MAX_TIMEOUT_MS}ms, também por chamada via timeout_ms)` +
       `${TIMEOUT_IS_DEFAULT ? ` — padrão; ajuste com ${ENV_TIMEOUT_MS}` : ""}`
   );
+  info(`logs em: ${LOG_DIR}`);
   info(
     RESUME_ON_TIMEOUT
       ? "retomada automática: habilitada"

@@ -21465,7 +21465,8 @@ var MAX_BUFFER_BYTES = 50 * 1024 * 1024;
 var PROBE_MAX_BUFFER_BYTES = 1024 * 1024;
 var VERSION_MAX_BUFFER_BYTES = 64 * 1024;
 var MAX_LOG_BYTES = 5 * 1024 * 1024;
-var LOG_DIR = process.env[ENV_LOG_DIR]?.trim() || join(homedir(), ".mcp-servers", "antigravity-bridge");
+var DEFAULT_LOG_DIR = join(homedir(), ".antigravity-bridge", "logs");
+var LOG_DIR = process.env[ENV_LOG_DIR]?.trim() || DEFAULT_LOG_DIR;
 var LOG_FILE = join(LOG_DIR, "mcp-activity.log");
 var LOG_FILE_PREVIOUS = `${LOG_FILE}.1`;
 var RESUME_PROMPT = "Recupere a resposta final que voc\xEA j\xE1 produziu nesta conversa, sem refazer o trabalho e sem executar novas ferramentas.";
@@ -22299,6 +22300,7 @@ function announceReady(capabilities) {
   info(
     `timeout efetivo: ${AGY_TIMEOUT_MS}ms (${PRINT_TIMEOUT_ARG}, backstop Node ${NODE_TIMEOUT_MS}ms, retomada ${RESUME_TIMEOUT_MS}ms; faixa aceita ${MIN_TIMEOUT_MS}-${MAX_TIMEOUT_MS}ms, tamb\xE9m por chamada via timeout_ms)${TIMEOUT_IS_DEFAULT ? ` \u2014 padr\xE3o; ajuste com ${ENV_TIMEOUT_MS}` : ""}`
   );
+  info(`logs em: ${LOG_DIR}`);
   info(
     RESUME_ON_TIMEOUT ? "retomada autom\xE1tica: habilitada" : `retomada autom\xE1tica: desabilitada (use ${ENV_RESUME_ON_TIMEOUT}=true para habilitar)`
   );

@@ -57,6 +57,8 @@ O `agy` tem as próprias skills e elas **funcionam em headless** (medido, inclus
 - Mecânico e volumoso → Flash `-low`/`-medium`. Raciocínio difícil → `gemini-3.1-pro-high` ou `claude-opus-5-5-high`.
 - Combinação inválida falha na hora, sem custo.
 
+> ⚠️ **Depreciação:** `gpt-oss-120b` será removido do Antigravity em 02/11/2026. Após essa data, use outro modelo. A detecção de drift do servidor avisa quando o `agy` deixar de listá-lo.
+
 Catálogo completo dos 25 valores e exemplos válidos/inválidos: [reference/models.md](reference/models.md).
 
 ## Timeout (resumo)
