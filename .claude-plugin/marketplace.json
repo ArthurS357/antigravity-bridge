@@ -1,0 +1,14 @@
+{
+  "name": "antigravity-bridge",
+  "description": "Marketplace do Antigravity Bridge: ponte MCP do Claude Code para a CLI headless do Antigravity (agy).",
+  "owner": {
+    "name": "TR57"
+  },
+  "plugins": [
+    {
+      "name": "antigravity-bridge",
+      "source": "./",
+      "description": "Delega tarefas autocontidas ao Antigravity (agy) via MCP, com a skill que ensina quando e como delegar."
+    }
+  ]
+}

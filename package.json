@@ -26,7 +26,8 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:plugin": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node22.18 --outfile=dist/server.mjs"
   },
   "engines": {
     "node": ">=22.18.0"
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
+    "esbuild": "0.28.2",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   }

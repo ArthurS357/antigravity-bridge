@@ -32,6 +32,36 @@ A skill [`antigravity-delegate`](skills/antigravity-delegate/SKILL.md) ensina o 
 cp -r skills/antigravity-delegate ~/.claude/skills/
 ```
 
+### Como plugin
+
+O repositório também é um plugin do Claude Code (e um marketplace de um plugin só). O plugin traz o servidor e a skill juntos, sem `npm install`: o servidor roda de `dist/server.mjs`, um bundle esbuild autocontido (~746 KB, sem `node_modules`).
+
+```
+/plugin marketplace add ArthurS357/antigravity-bridge
+/plugin install antigravity-bridge@antigravity-bridge
+```
+
+Para testar a partir de um clone, sem instalar: `claude --plugin-dir /caminho/para/antigravity-bridge`.
+
+Requisitos iguais aos de cima: Node.js ≥ 22.18.0 e `agy` no `PATH`, autenticado.
+
+**Variáveis `AGY_*`.** O manifesto não define nenhuma; o servidor herda o ambiente do Claude Code. Defina-as no bloco `env` do `~/.claude/settings.json` (ou no ambiente do sistema):
+
+```json
+{ "env": { "AGY_TIMEOUT_MS": "600000", "AGY_SKIP_PERMISSIONS": "true" } }
+```
+
+Medido: com `AGY_TIMEOUT_MS` e `AGY_RESUME_ON_TIMEOUT` no `env` das configurações, o servidor do plugin anunciou o timeout e a retomada configurados. `AGY_SKIP_PERMISSIONS` segue opt-in e não vem ligado; leia o [alerta de segurança](#️-alerta-de-segurança-prompt-injection) antes de ligar. O `env` das configurações vale para todo processo que o Claude Code inicia, não só para este servidor.
+
+**Migrando do servidor de usuário para o plugin:**
+
+- Os nomes das ferramentas mudam: `mcp__antigravity-bridge__*` vira `mcp__plugin_antigravity-bridge_antigravity-bridge__*`. Entradas de `permissions.allow` com o nome antigo não valem para o plugin.
+- Com os dois ativos, as duas famílias de ferramentas aparecem ao mesmo tempo. Remova o registro de usuário antes: `claude mcp remove antigravity-bridge -s user`.
+- A skill do plugin aparece como `antigravity-bridge:antigravity-delegate`. Se você copiou a skill para `~/.claude/skills/`, as duas aparecem; apague a cópia.
+- O `env` do registro de usuário (`claude mcp add --env ...`) não passa para o plugin. Mova os valores para o `settings.json`.
+
+**Mantenedores:** depois de mudar o código, rode `npm run build:plugin` e commite `dist/server.mjs`. O `npm test` falha se o bundle estiver desatualizado ou se a versão do `.claude-plugin/plugin.json` divergir da do `package.json`.
+
 ## Ferramentas
 
 | Ferramenta | Parâmetros | O que faz |
@@ -56,7 +86,7 @@ A lista completa e exemplos válidos e inválidos estão em [`skills/antigravity
 
 Medido com o `agy` 1.2.16 (Windows), chamando o binário real, direto e pela ponte:
 
-- **As skills carregam em modo headless**, inclusive com `--disable-slash-commands`, que a ponte sempre passa, e via `run_antigravity_task`. O teste usou duas skills de sonda com uma palavra-código que só existia no corpo do `SKILL.md`: o `agy` listou as skills e devolveu a palavra, numa chamada direta e pela ponte.
+- **As skills carregam em modo headless**, inclusive com `--disable-slash-commands`, que a ponte passa (na chamada principal e nas duas retomadas) sempre que a sondagem de capacidades detecta a flag, e via `run_antigravity_task`. O teste usou duas skills de sonda com uma palavra-código que só existia no corpo do `SKILL.md`: o `agy` listou as skills e devolveu a palavra, numa chamada direta e pela ponte.
 - **`--disable-slash-commands` não esconde skills.** Ele desliga a expansão de `/comando` no prompt. Um `/nome-da-skill` literal no prompt foi atendido igual com e sem a flag, porque o modelo acha a skill pelo nome. O efeito exato da flag sobre comandos de usuário não foi isolado, mas ela não é inerte: com ela, o `agy` avisa que `--mode plan has no effect`. A retomada passa a flag também, para rodar com o mesmo conjunto de flags da chamada original.
 - **Onde ele procura:** `~/.gemini/config/skills/` (global; no ambiente de desenvolvimento, um link simbólico para `~/.claude/skills/`), `.agents/skills/` do workspace (subindo a partir do cwd) e as skills embutidas. `~/.gemini/skills/` **não** é lido: skills que existiam só ali ficaram invisíveis. O formato é `skills/<nome>/SKILL.md` com `name` e `description` no frontmatter; só nome e descrição entram no contexto, e o corpo é lido quando o modelo ativa a skill. Se `~/.gemini/config/skills` for um link para `~/.claude/skills`, as skills do Claude Code chegam ao `agy` (no ambiente testado chegam, e ele enxergava ~182 skills).
 - **Retomada** (`--conversation`): as skills também estão disponíveis. Uma skill nunca lida na conversa original foi ativada corretamente após a retomada.
@@ -93,7 +123,7 @@ O código é organizado em quatro camadas. As dependências fluem numa direção
 | `module/resume-tool.ts` | A tool `resume_conversation`: retomada explícita por `conversation_id`, sem retomada automática encadeada. |
 | `module/heartbeat.ts` | `notifications/progress` a cada 30 s durante uma chamada, para o cliente MCP não abortá-la por ociosidade. |
 
-Nada é compilado: `package.json#bin` aponta direto para `src/index.ts` e o Node faz type stripping em tempo de carga (≥ 22.18). `tsc` é usado só como verificador (`npm run typecheck`), o que também é o motivo de os imports relativos carregarem a extensão `.ts` de verdade.
+Nada é compilado: `package.json#bin` aponta direto para `src/index.ts` e o Node faz type stripping em tempo de carga (≥ 22.18). `tsc` é usado só como verificador (`npm run typecheck`), o que também é o motivo de os imports relativos carregarem a extensão `.ts` de verdade. A exceção é o plugin, que roda `dist/server.mjs`, um bundle gerado por `npm run build:plugin` e commitado (ver [Como plugin](#como-plugin)).
 
 ## ⚠️ Alerta de Segurança: Prompt Injection
 

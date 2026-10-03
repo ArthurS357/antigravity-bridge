@@ -1,0 +1,2 @@
+# Committed esbuild bundle: byte-identical to a fresh build (test/plugin.test.mjs).
+dist/server.mjs -text

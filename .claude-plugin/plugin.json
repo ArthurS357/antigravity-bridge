@@ -1,0 +1,16 @@
+{
+  "name": "antigravity-bridge",
+  "version": "1.9.0",
+  "description": "Delega tarefas autocontidas ao Antigravity (agy) via MCP, com a skill que ensina quando e como delegar.",
+  "author": { "name": "TR57" },
+  "license": "MIT",
+  "homepage": "https://github.com/ArthurS357/antigravity-bridge#readme",
+  "repository": "https://github.com/ArthurS357/antigravity-bridge",
+  "keywords": ["mcp", "antigravity", "agy", "delegation"],
+  "mcpServers": {
+    "antigravity-bridge": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/server.mjs"]
+    }
+  }
+}
