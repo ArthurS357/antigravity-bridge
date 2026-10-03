@@ -1,6 +1,6 @@
 {
   "name": "antigravity-mcp-server",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "Servidor MCP que delega tarefas autocontidas à CLI headless do Antigravity (agy) a partir do Claude Code.",
   "license": "MIT",
   "author": "ArthurS357",

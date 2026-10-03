@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Windows: the bridge and its tests are developed and run there (agy, %TEMP% cwd, .cmd shims).
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22.x", "24.x"]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install (exactly the lockfile)
+        run: npm ci
+
+      - name: Rebuild plugin bundle from scratch
+        run: npm run build:plugin
+
+      - name: Committed bundle matches the rebuild
+        run: |
+          if ! git diff --exit-code --stat -- dist/server.mjs; then
+            echo "::error file=dist/server.mjs::Bundle commitado está desatualizado em relação ao código-fonte ou às dependências do lockfile. Rode \`npm run build:plugin\` e commite o resultado."
+            exit 1
+          fi
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Includes the bundle smoke test: dist/server.mjs alone in an empty dir, real MCP handshake.
+      - name: Test
+        run: npm test
+
+      - name: Audit (high and above)
+        run: npm audit --audit-level=high

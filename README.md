@@ -1,5 +1,7 @@
 # Antigravity Bridge (MCP Server)
 
+[![CI](https://github.com/ArthurS357/antigravity-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/ArthurS357/antigravity-bridge/actions/workflows/ci.yml)
+
 Servidor MCP em Node.js/TypeScript para integrar o Claude Code à CLI headless do Google Antigravity (`agy`).
 
 ## O que é (e o que não é)
@@ -60,7 +62,7 @@ Medido: com `AGY_TIMEOUT_MS` e `AGY_RESUME_ON_TIMEOUT` no `env` das configuraç�
 - A skill do plugin aparece como `antigravity-bridge:antigravity-delegate`. Se você copiou a skill para `~/.claude/skills/`, as duas aparecem; apague a cópia.
 - O `env` do registro de usuário (`claude mcp add --env ...`) não passa para o plugin. Mova os valores para o `settings.json`.
 
-**Mantenedores:** depois de mudar o código, rode `npm run build:plugin` e commite `dist/server.mjs`. O `npm test` falha se o bundle estiver desatualizado ou se a versão do `.claude-plugin/plugin.json` divergir da do `package.json`.
+**Mantenedores:** depois de mudar o código, rode `npm run build:plugin` e commite `dist/server.mjs`. O `npm test` falha se o bundle estiver desatualizado ou se a versão do `.claude-plugin/plugin.json` ou do `serverInfo` (`SERVER_VERSION` em `src/constants.ts`) divergir da do `package.json`. O CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) refaz o bundle a partir do lockfile num ambiente limpo e falha se ele não bater com o commitado.
 
 ## Ferramentas
 
@@ -102,11 +104,11 @@ Nenhuma flag nova foi necessária.
 A ponte grava **o prompt enviado e a resposta recebida** em `mcp-activity.log` (rotacionado em `mcp-activity.log.1` aos 5 MiB), dentro do diretório de log:
 
 1. `ANTIGRAVITY_LOG_DIR`, se definida e não vazia: usada exatamente como está;
-2. senão, `~/.antigravity-bridge/logs/` (no Windows, `%USERPROFILE%.antigravity-bridgelogs`).
+2. senão, `~/.antigravity-bridge/logs/` (no Windows, `%USERPROFILE%\.antigravity-bridge\logs`).
 
 O padrão fica na sua pasta pessoal, não na do pacote, para sobreviver se o código for movido ou reinstalado. O diretório é criado no startup se não existir, e o caminho efetivo aparece uma vez no stderr: `[antigravity-bridge] logs em: <caminho>`. A suíte de testes força `ANTIGRAVITY_LOG_DIR` para `test/.generated/logs/`.
 
-Para mudar o local, defina a variável no registro do MCP (`claude mcp add … --env ANTIGRAVITY_LOG_DIR=<pasta> -- antigravity-mcp`) e reinicie o Claude Code. Para levar o histórico, copie `mcp-activity.log*` da pasta antiga para a nova antes de reiniciar. Até a v1.9.0 o padrão era `~/.mcp-servers/antigravity-bridge/`; se o seu log antigo está lá, copie-o para `~/.antigravity-bridge/logs/` (ou recomece do zero: o servidor cria um log novo).
+Para mudar o local, defina a variável no registro do MCP (`claude mcp add … --env ANTIGRAVITY_LOG_DIR=<pasta> -- antigravity-mcp`) e reinicie o Claude Code. Para levar o histórico, copie `mcp-activity.log*` da pasta antiga para a nova antes de reiniciar. Até a v1.9.0 o padrão era `~/.mcp-servers/antigravity-bridge/` (a variável e o padrão novo chegaram na v1.10.0); se o seu log antigo está lá, copie-o para `~/.antigravity-bridge/logs/` (ou recomece do zero: o servidor cria um log novo).
 
 O arquivo cresce com o conteúdo das suas tarefas: **não o publique nem o anexe a issues sem revisar**. Use uma pasta fora de qualquer repositório; o `.gitignore` deste já exclui `mcp-activity.log*`.
 
@@ -350,7 +352,7 @@ Os testes sobem a ponte real (`src/index.ts` e os módulos que ela compõe) e fa
 
 Como `lib/process-runner.ts` é o único launcher, [`test/helpers/build-test-server.mjs`](test/helpers/build-test-server.mjs) copia a árvore de produção e reescreve **uma única linha** para apontar ao dublê — e falha ruidosamente se aquela linha sair do lugar, em vez de deixar os testes baterem no `agy` de verdade. O número de chamadores de `runAgy` (5) virou invariante verificada pela suíte.
 
-Cobertura (130 casos):
+Cobertura (143 casos):
 
 - **Estrutura modular**: só `process-runner` importa `child_process`; `src/` não depende de `service/` nem de `module/`; nenhum módulo importa o entry point; todo import relativo carrega `.ts`; nenhum arquivo passa de 250 linhas.
 - **Timeout configurável** (`AGY_TIMEOUT_MS`): padrão de 600000, customizado, os extremos 10000 e 3600000, valores inválidos (`abc`, `-5`, `0`, vazio, `9999`, `3600001`) e a folga de 10s do backstop.
@@ -369,6 +371,8 @@ Cobertura (130 casos):
 - **cwd neutro do spawn**: `AGY_CWD` fixa o diretório do filho; sem ela o filho cai no diretório neutro e não herda o cwd do servidor.
 - **Casos que não devem retomar**: erro comum, backstop do Node, estouro de `maxBuffer`, cancelamento MCP.
 - **Premissas de segurança**: zero `shell:` em toda a árvore, gate de permissões num único ponto consultado pelas duas chamadas, e a forma `--flag=valor` verificada argumento a argumento numa chamada real com retomada.
+- **Isolamento do log**: chamadas de teste gravam em `test/.generated/logs`, nunca no log real; `ANTIGRAVITY_LOG_DIR` definida é anunciada no startup; vazia cai em `~/.antigravity-bridge/logs` (numa home descartável) e cria o diretório.
+- **Plugin e versão**: `dist/server.mjs` idêntico a um build novo, e `plugin.json` e `serverInfo.version` iguais ao `package.json`, e o bundle sozinho numa pasta vazia (sem `node_modules` nem `src/`) completando o handshake MCP e listando as duas ferramentas.
 
 ### Medir o timeout do cliente (`test/measure.mjs`)
 

@@ -21442,7 +21442,7 @@ import { promisify } from "util";
 import { join } from "path";
 import { homedir, tmpdir } from "os";
 var SERVER_NAME = "antigravity-bridge";
-var SERVER_VERSION = "1.9.0";
+var SERVER_VERSION = "1.10.0";
 var LOG_PREFIX = `[${SERVER_NAME}]`;
 var AGY_BIN = "agy";
 var TOOL_NAME = "run_antigravity_task";

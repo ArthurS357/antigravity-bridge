@@ -9,7 +9,7 @@ description: Delega tarefas longas ou exploratórias ao Antigravity IDE via MCP.
 
 ## O que é
 
-O Antigravity Bridge (servidor MCP `antigravity-bridge`, v1.9.0) é um **delegador**, não um inspetor do IDE. Ele repassa um prompt à CLI headless `agy`, que roda em **outro processo**, com contexto próprio, num diretório neutro e vazio, **sem acesso a esta conversa nem ao editor**. O `agy` só sabe o que o prompt disser.
+O Antigravity Bridge (servidor MCP `antigravity-bridge`, v1.10.0) é um **delegador**, não um inspetor do IDE. Ele repassa um prompt à CLI headless `agy`, que roda em **outro processo**, com contexto próprio, num diretório neutro e vazio, **sem acesso a esta conversa nem ao editor**. O `agy` só sabe o que o prompt disser.
 
 Ferramentas:
 - `mcp__antigravity-bridge__run_antigravity_task`: executa a tarefa. Parâmetros: `prompt` (obrigatório), `context_files`, `model`, `effort`, `timeout_ms`, `json_output`, `json_schema`.

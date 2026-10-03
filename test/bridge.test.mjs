@@ -289,7 +289,9 @@ describe("chamada normal (regressão)", () => {
     await withServer({ FAKE_MODE: "ok" }, async (server) => {
       const init = await server.handshake();
       assert.equal(init?.result?.serverInfo?.name, "antigravity-bridge");
-      assert.equal(init?.result?.serverInfo?.version, "1.9.0");
+      // SERVER_VERSION is hardcoded in src/constants.ts; pin it to package.json so a bump can't miss it.
+      const { version } = JSON.parse(readFileSync(join(PACKAGE_ROOT, "package.json"), "utf8"));
+      assert.equal(init?.result?.serverInfo?.version, version);
 
       const tools = await server.request("tools/list", {});
       assert.deepEqual(

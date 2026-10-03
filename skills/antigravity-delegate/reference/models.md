@@ -1,6 +1,6 @@
 # Modelos e esforço (`model` / `effort`)
 
-Fonte: `service/model-catalog.ts` do Antigravity Bridge v1.9.0, verificado contra `agy models` no agy 1.2.16 em 2026-10-03. Toda combinação inválida é **rejeitada localmente, sem spawnar o `agy`** (erro instantâneo e gratuito). Valor fora do enum vira `InvalidParams` do SDK.
+Fonte: `service/model-catalog.ts` do Antigravity Bridge v1.10.0, verificado contra `agy models` no agy 1.2.16 em 2026-10-03. Toda combinação inválida é **rejeitada localmente, sem spawnar o `agy`** (erro instantâneo e gratuito). Valor fora do enum vira `InvalidParams` do SDK.
 
 > ⚠️ **Depreciação:** `gpt-oss-120b` será removido do Antigravity em 02/11/2026. Após essa data, use outro modelo. A detecção de drift do servidor avisa quando o `agy` deixar de listá-lo.
 

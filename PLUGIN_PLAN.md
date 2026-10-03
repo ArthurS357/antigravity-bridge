@@ -1,6 +1,6 @@
 # Plano: empacotar o Antigravity Bridge como plugin do Claude Code
 
-Estado: **implementado no repositório em 2026-10-03** (`.claude-plugin/`, `dist/server.mjs`, `npm run build:plugin`, `test/plugin.test.mjs`). Validado com o Claude Code 2.1.186, a versão que `claude --version` mostrou nessa data. A versão 2.1.286 citada antes neste plano e no README não confere com a instalada e não foi revista.
+Estado: **implementado no repositório em 2026-10-03** (`.claude-plugin/`, `dist/server.mjs`, `npm run build:plugin`, `test/plugin.test.mjs`). Validado com o Claude Code 2.1.186, o `claude` do npm (o que `claude --version` resolve no PATH). As medições de timeout do README usam a 2.1.286, a build embutida no app desktop (`%APPDATA%\Claude\claude-code\<versão>\<hash>\claude.exe`): são dois binários instalados lado a lado, não uma divergência. O plugin não foi revalidado na 2.1.286.
 
 ## Estrutura final
 
@@ -22,7 +22,7 @@ antigravity-bridge/
 ```json
 {
   "name": "antigravity-bridge",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "Delega tarefas autocontidas ao Antigravity (agy) via MCP, com a skill que ensina quando e como delegar.",
   "author": { "name": "ArthurS357" },
   "license": "MIT",
@@ -61,14 +61,14 @@ Node.js ≥ 22.18.0 (o bundle é ESM para Node 22), `agy` no `PATH` e autenticad
 3. ~~Criar `.claude-plugin/plugin.json` e `marketplace.json`~~ (feito).
 4. ~~`claude plugin validate`~~ (feito: marketplace e plugin passam sem avisos).
 5. ~~Teste local com `--plugin-dir`~~ (feito: as duas ferramentas listam com o novo prefixo, a skill aparece como `antigravity-bridge:antigravity-delegate`, e uma chamada real devolveu `ok`). O registro de usuário foi removido só durante o teste e restaurado em seguida.
-6. ~~Publicar no GitHub~~ (feito: `github.com/ArthurS357/antigravity-bridge`; os commits do catálogo e deste plano ainda aguardam push). Depois: `/plugin marketplace add ArthurS357/antigravity-bridge` e `/plugin install antigravity-bridge@antigravity-bridge`.
+6. ~~Publicar no GitHub~~ (feito: `github.com/ArthurS357/antigravity-bridge`; os commits do catálogo e deste plano já foram enviados, `main` em dia com `origin/main` em 2026-10-03). Depois: `/plugin marketplace add ArthurS357/antigravity-bridge` e `/plugin install antigravity-bridge@antigravity-bridge`.
 7. Instalar de verdade numa conta limpa e repetir as checagens: o servidor conecta, as duas ferramentas listam e a skill aparece.
 
 ## O que ainda falta
 
-- **Instalação via marketplace não foi testada** (só `--plugin-dir`): depende do push dos commits pendentes e da validação pós-reinício do servidor de usuário.
-- **CI ainda não existe:** `tsc --noEmit`, `npm test` (inclui a checagem de `dist/` e o isolamento do log) e `claude plugin validate`.
-- **Versão em dois lugares** (`package.json` e `plugin.json`): o teste pega divergência, mas o bump continua manual.
+- **Instalação via marketplace não foi testada** (só `--plugin-dir`): o push já foi feito; falta a validação pós-reinício do servidor de usuário.
+- **CI criado, ainda não executado no GitHub:** `.github/workflows/ci.yml` (v1.10.0) roda `npm ci`, `build:plugin` com `git diff --exit-code dist/`, smoke do bundle numa pasta vazia, `tsc --noEmit`, `npm test` e `npm audit --audit-level=high`. Só roda depois do push. `claude plugin validate` fica fora (exige o binário do Claude Code no runner).
+- **Versão em três lugares** (`package.json`, `plugin.json` e `SERVER_VERSION` em `src/constants.ts`): os testes pegam divergência entre os três, mas o bump continua manual.
 - ~~**Catálogo de modelos** desatualizado (`claude-*-4-6` aposentados, `claude-*-5-5-*` novos)~~ (feito em 2026-10-03, contra `agy models` do 1.2.16).
 - ~~**`gpt-oss-120b` base** não exposta~~ (feito em 2026-10-03: base com `effort` opcional, só `medium`).
 - ~~**Testes gravando no log real**~~ (feito: `ANTIGRAVITY_LOG_DIR` aponta a suíte para `test/.generated/logs`).

@@ -3,9 +3,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { copyFileSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { startServer } from "./helpers/mcp-client.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const readJson = (path) => JSON.parse(readFileSync(join(ROOT, path), "utf8"));
@@ -27,4 +30,28 @@ test("dist/server.mjs é idêntico a um build novo (rode npm run build:plugin)",
     stdio: ["ignore", "pipe", "pipe"],
   });
   assert.ok(fresh === readFileSync(join(ROOT, "dist/server.mjs"), "utf8"), "bundle desatualizado");
+});
+
+test("dist/server.mjs roda sozinho numa pasta vazia (sem node_modules nem src/)", async () => {
+  // The plugin ships only the bundle; any import it failed to inline would crash here.
+  const dir = mkdtempSync(join(tmpdir(), "antigravity-bridge-bundle-"));
+  copyFileSync(join(ROOT, "dist/server.mjs"), join(dir, "server.mjs"));
+  const server = startServer(join(dir, "server.mjs"));
+  const died = new Promise((_, reject) =>
+    server.child.once("exit", (code) => reject(new Error(`bundle saiu com código ${code}:\n${server.stderr()}`)))
+  );
+  died.catch(() => {}); // only observed through the race below
+  try {
+    const init = await Promise.race([server.handshake(), died]);
+    assert.equal(init?.result?.serverInfo?.version, readJson("package.json").version, server.stderr());
+    const tools = await Promise.race([server.request("tools/list", {}), died]);
+    assert.deepEqual(
+      tools?.result?.tools?.map((t) => t.name).sort(),
+      ["resume_conversation", "run_antigravity_task"],
+      server.stderr()
+    );
+  } finally {
+    server.stop();
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5 });
+  }
 });

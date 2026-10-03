@@ -62,8 +62,6 @@ A redução real de superfície fica nas permissões do próprio `agy`, em `~/.g
 
 `npm audit` em 2026-10-03: 4 vulnerabilidades (1 alta, 3 moderadas), **todas transitivas** via `@modelcontextprotocol/sdk@1.30.0`.
 
-| Pacote | Severidade | Origem | Alcançável aqui? |
-|---|---|---|---|
 | Pacote | Severidade | Origem | Alcançável aqui? | Corrigido para |
 |---|---|---|---|---|
 | `hono` | moderada | transporte HTTP do SDK | Não: o servidor só importa `StdioServerTransport`. | 4.13.1 → 4.13.12 |
@@ -72,6 +70,8 @@ A redução real de superfície fica nas permissões do próprio `agy`, em `~/.g
 | `fast-uri` | alta | `ajv`, carregado pelo `server/index.js` do SDK | Improvável: os CVEs são de normalização de host/URI (SSRF, confusão de host); o `ajv` só valida schemas locais, sem buscar URIs. | 3.1.5 → 3.1.8 |
 
 **Decisão:** corrigido com `npm audit fix` (sem `--force`). Só o `package-lock.json` mudou, dentro dos ranges já declarados; o `package.json` ficou intacto. Depois do fix: `npm audit` com 0 vulnerabilidades, `npm test` 131/131, `tsc --noEmit` limpo e handshake MCP real (`initialize` + `tools/list`) respondendo as duas ferramentas.
+
+Reconferido na v1.10.0 (2026-10-03): `npm audit` com 0 vulnerabilidades e `npm test` 143/143 (a suíte cresceu desde o 131/131 acima). O CI roda `npm audit --audit-level=high` a cada push.
 
 ## Reportar uma vulnerabilidade
 

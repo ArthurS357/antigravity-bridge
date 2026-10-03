@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/** Every test server logs here, never to the real ~/.mcp-servers log. */
+/** Every test server logs here, never to the real ~/.antigravity-bridge/logs. */
 export const TEST_LOG_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", ".generated", "logs");
 
 export function startServer(serverPath, env = {}) {
