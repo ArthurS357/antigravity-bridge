@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "strict": true,
+    "types": ["node"],
+
+    // Nothing is ever compiled: package.json#bin points straight at
+    // src/index.ts and Node strips the types at load time (>=22.18). tsc is
+    // used purely as a checker, which is also what lets relative imports
+    // carry the real `.ts` extension the runtime needs to resolve them.
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src/**/*.ts", "lib/**/*.ts", "service/**/*.ts", "module/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test", "test/.generated"]
+}
