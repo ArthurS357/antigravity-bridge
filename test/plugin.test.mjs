@@ -23,7 +23,12 @@ test("dist/server.mjs é idêntico a um build novo (rode npm run build:plugin)",
     .split(" ")
     .slice(1)
     .filter((arg) => !arg.startsWith("--outfile="));
-  const fresh = execFileSync(process.execPath, [join(ROOT, "node_modules/esbuild/bin/esbuild"), ...args], {
+  // On Linux/macOS esbuild's install swaps bin/esbuild for its native binary (or
+  // leaves a `#!/usr/bin/env node` script, which npm marks executable): run it
+  // directly. Windows cannot exec a script, and there it is always the JS wrapper.
+  const bin = join(ROOT, "node_modules/esbuild/bin/esbuild");
+  const [file, argv] = process.platform === "win32" ? [process.execPath, [bin, ...args]] : [bin, args];
+  const fresh = execFileSync(file, argv, {
     cwd: ROOT,
     encoding: "utf8",
     maxBuffer: 16 * 1024 * 1024,
